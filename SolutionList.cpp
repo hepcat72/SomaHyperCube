@@ -558,7 +558,7 @@ SolutionList::iterator SolutionList::last()
 	return i;
 }
 
-bool SolutionList::iterator::operator!=(SolutionList::iterator& rhs)
+bool SolutionList::iterator::operator!=(SolutionList::iterator const& rhs)
 {
 	//right now this only works for telling if the iterator hasn't reached the end
 	//if I have time, I'll make this work for solutions in the middle or beginning
