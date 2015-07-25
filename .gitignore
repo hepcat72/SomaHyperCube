@@ -1,3 +1,12 @@
 .DS_Store
 OLD
 Makefile-old
+DimensionalUnitTree.o
+Piece.o
+PieceList.o
+RotationList.o
+Solution.o
+SolutionList.o
+SolutionState.o
+TranslationList.o
+puzzle.o
