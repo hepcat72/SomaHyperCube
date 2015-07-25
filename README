@@ -1,6 +1,10 @@
 Soma Hypercube Documentation
 Author: Robert W. Leach
 
+FOREWORD:
+
+The following describes a program I wrote as a beginner C++ student in school way back in 2000.  It's extremely slow and the output format is very lacking.  I haven't coded in C++ since 2000.  I work in a different language now.  But I resurrected this program out of nostalgia.  It will solve very small puzzles correctly (theoretically) in any number of dimensions, but as I mentioned - it has to be small unless you want to wait an eternity.  The compiler that compiled it back in 2000 was CodeWarrior on a Mac, pre-OSX.  So it took some effort to get it to compile with today's compilers.  I have successfully compiled it on Mac OS X 10.9 Mavericks, though it may take some effort to get it to compile anywhere else.  Please feel free to branch this project and improve performance, file format, and usability.  It's fun to think you can use it to solve a hyper-dimensional soma cube!
+
 I. Overview
 
 The Soma Hybercube is a program designed to find solutions to what's commonly known as a 
