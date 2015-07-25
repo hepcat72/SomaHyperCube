@@ -10,7 +10,14 @@ this a step further by being able to handle puzzles composed in any number of di
 The program will find all possible solutions to a given puzzle unless limited by a user-
 defined maximum defined on the command line.
 
-II. Input
+II. Usage
+
+puzzle 1 < input_file.txt
+
+The input file is supplied on standard in and the single required argument is the number
+of desired solutions.
+
+III. Input
 
 The Soma Hypercube will take a file redirected in as standard input from the command line.  
 It may also take one command line argument, which would be the number of solutions desired 
@@ -41,7 +48,7 @@ file):
 00
 
 
-III. Output
+IV. Output
 
 The format of the output is similar to the input, but all the pieces are combined and 
 different numbers represent units of different pieces.  Each incremented number represents 
@@ -60,7 +67,7 @@ Solution 1 is
 If the user wants more solutions than are possible as indicated on the command line 
 argument, the program will simply output as many solutions as it can and stop.
 
-IV. Installation
+V. Installation
 
 A 'makefile' has been provided for your convenience.  From the directory in which the 
 makefile and all the '.h' and '.cpp' files reside, type this command:
@@ -74,7 +81,7 @@ If you would like to uninstall the application, type this command:
 If any updated files come along, all you have to do to update your application is run the 
 make puzzle command again.
 
-V. How It Works
+VI. How It Works
 
 The basic data structure involved in the program is a tree structure.  The actual unit 
 information is kept in the leaves of the tree, however there is data in the nodes as well 
@@ -302,7 +309,7 @@ and reads in a PieceList from standard input, passes the resulting PieceList to 
 SolutionList constructor, and iterates through (and prints) all the solutions or at least 
 as many as the number of solutions the user indicates on the command line.
 
-VI. Acknowledgements
+VII. Acknowledgements
 
 I'd like to thank Paul Bourke for his Hyperspace application and User Manual.  The 
 application depicts rotations in 4 dimensions and it and the user manual was the first and 
