@@ -10,3 +10,4 @@ SolutionList.o
 SolutionState.o
 TranslationList.o
 puzzle.o
+puzzle
