@@ -1,0 +1,315 @@
+Soma Hypercube Documentation
+Author: Robert W. Leach
+
+I. Overview
+
+The Soma Hybercube is a program designed to find solutions to what's commonly known as a 
+Soma Cube, but in a variable number of dimensions.  A Soma Cube puzzle is a collection of 
+pieces, that when put together properly, form a cube.  The Soma Hypercube program takes 
+this a step further by being able to handle puzzles composed in any number of dimensions.  
+The program will find all possible solutions to a given puzzle unless limited by a user-
+defined maximum defined on the command line.
+
+II. Input
+
+The Soma Hypercube will take a file redirected in as standard input from the command line.  
+It may also take one command line argument, which would be the number of solutions desired 
+by the user.  The input file is composed of 2 parts - a header which describes the nature 
+of the pieces being supplied and a body which hold piece shape information.  Pieces in the 
+body are represented by collections of zeros and ones.  Each line is a one-dimensional 
+slice of the whole hypercube with only one piece in it.  A '1' indicates that a particular 
+unit in that one-dimensional slice is occupied, while a '0' indicates that unit is empty.  
+The number of lines defining one piece is: 
+	(edge size)# of dimensions
+Here is an example file with comments on the right (which are not part of a valid input 
+file):
+
+3				Number of dimensions
+2				Length of all edges of the hypercube
+3				Number of pieces in this file that make up the whole puzzle
+11				Beginning of first piece
+10
+00
+00
+11				Beginning of second piece
+10
+00
+00
+11				Beginning of third piece
+00
+00
+00
+
+
+III. Output
+
+The format of the output is similar to the input, but all the pieces are combined and 
+different numbers represent units of different pieces.  Each incremented number represents 
+pieces supplied in the input file respectively.  So the first piece would be represented 
+by ones, the second by twos, and so forth.  Here's an example of a solution to the above 
+sample input file:
+
+Solution 1 is
+
+12
+13
+22
+13
+
+
+If the user wants more solutions than are possible as indicated on the command line 
+argument, the program will simply output as many solutions as it can and stop.
+
+IV. Installation
+
+A 'makefile' has been provided for your convenience.  From the directory in which the 
+makefile and all the '.h' and '.cpp' files reside, type this command:
+
+	make puzzle
+
+If you would like to uninstall the application, type this command:
+
+	make clean
+
+If any updated files come along, all you have to do to update your application is run the 
+make puzzle command again.
+
+V. How It Works
+
+The basic data structure involved in the program is a tree structure.  The actual unit 
+information is kept in the leaves of the tree, however there is data in the nodes as well 
+that allows handling of the data to take shortcuts.  Each node knows whether any of its 
+leaves is occupied by a piece or part of a piece.  The number of branches from a node is 
+always the edge-length of the hypercube.  The objects at each node and leaf are called 
+"DimensionalUnitTree" objects.  These objects are the grunt workers of "Piece" objects.  
+A Piece object is simply an interface to the DimensionalUnitTree that keeps track of the 
+tree root, basic universal Piece information that applies across the tree objects, and 
+overall piece operations.  The DimensionalUnitTree objects can be considered the guts and 
+internal workings of a Piece, so here, I will simply show you what's available through the 
+Piece class:
+
+Piece
+	Private Data:
+		Number of dimensions
+		Edge size
+		DimensionalUnitTree root pointer
+	Public Functions:
+		Normalize(dimension) - brings the units of each dimension to their first 
+			position unless supplied a dimension in which case it will only 
+			work on that dimension.
+		Translate(dimension) - Move a piece one unit along a given dimension.
+		Rotate(moving dimension, dimension spread) - turns a piece 90 degrees 
+			in the plane of the given dimensions.  The moving dimension is 
+			represented by the dimension which the actual moving units are.  
+			In other words, if you are moving the units that compose 
+			dimension 1, the moving dimension is 0.  The dimension spread is 
+			the dimension which the moving dimension is being spread 
+			across.  In other words, if the x axis is dimension 1, y is 2, and z is 
+			3;  a Rotate(0,2) rotation means that the 1st dimension's units are 
+			being spread across 2 dimensional slices in our 3 dimensional 
+			cube.  The position of the 0D units in the 1D slice they are moving 
+			from is the relative 1D slice position they will end up in, in the 
+			rotation.  The position of the 1D slice we are moving units from is 
+			the relative position of the units in their respective 1D slices they're 
+			moving to.  It's difficult to explain, but to put it simply; in 3 
+			dimensions, the different kinds of rotations are: (0,2), (0,3), and 
+			(1,3).  The moving dimension can be anything from 0 to 
+			((dimension spread)-2).  Dimension spread is anything from 2 to 
+			number of dimensions.  Rotations under 2 dimensions make no 
+			difference in overall piece orientation.  The direction of rotation is 
+			always left-handed, meaning if you point your left thumb out of the 
+			plane of rotation - towards yourself, the movement is in the 
+			direction that your left handed fingers curl.  A rotation's pivoting 
+			point is always the center of the hypercube it's represented in, so a 
+			rotation also ends up in a translation, so it is recommended that 
+			position not be important when a piece is rotated and that you 
+			Normalize after each rotation.
+		Collides(Piece) - Determines whether the calling Piece object collides 
+			with the supplied Piece object in their current orientations and 
+			returns a true or false boolean value.
+		GetSize() - Returns the number of units that make up a piece.
+		GetDepth(dimension) - Returns the last occupied unit position along the 
+			given dimension.
+		GetShallow(dimension) - Returns the first occupied unit position along 
+			the given dimension.
+		GetMaxDims() - Returns the number of dimensions describing the piece.
+		GetMaxUnits() - Returns the edge size of the hypercube.
+		Overloaded operator examples:
+			piece_a = piece_b;		//Set piece_a equal to piece_b
+			piece_a == piece_b;	//Are piece_a and piece_b equal?
+			piece_a != piece_b;		//Are piece_a and piece_b not equal?
+			cin >> piece_a;		//Read in piece_a from standard input
+			cout << piece_b;		//Write out piece_b to standard output
+
+Now that we have a way of representing and working with individual pieces, we need a 
+way of collecting them and methodically going through all their rotations and 
+translations in order to test all their possible positions when looking for a solution.  
+For this, we have 3 classes that work with pieces: PieceList, RotationList, and 
+TranslationList.
+
+The PieceList class simply provides a means by which we can read in a file of pieces 
+using operator>>, whereas in the Piece class, when you read in an individual Piece as 
+represented in the overloaded operator examples above, the Piece must already have a set 
+number of dimensions and units.  PieceList supplies this with the added capability of 
+being able to read in the header from the file provided.  Once it reads in the header, 
+it simply calls the Piece's operator>> to read in each piece.  PieceList also provides 
+an embedded iterator through which you can increment(++) and decrement(--) the pieces in 
+the list.  To initially set the iterator, first() and last() PieceList functions have 
+been provided.  first() returns an iterator pointing to the first Piece in its list.  
+last() returns the position beyond the last position in the list.  Dereferencing the the 
+iterator with operator*, returns the piece in the current position of the list.  Other 
+operations provided by the embedded iterator class are == and !=.
+
+RotationList provides a means by which we can generate all possible rotations of a piece.  
+It automatically filters out rotations that cause the piece to end up in an orientation 
+it's already been in and orientations that look the same based on piece symmetry.  
+RotationList also has an embedded iterator class and first() and last() functions that 
+work the exact same way PieceList's iterator class and first() and last() functions do.  
+The entire list of piece rotations is generated when the RotationList object is 
+instantiated, partly because each new rotation is compared against previous rotations to 
+see if the resulting orientation is one that's already been generated.
+
+TranslationList is also very similar to PieceList and RotationList in that it has an 
+embedded iterator class, but it's different in 2 ways.  For one, there's no -- operator 
+in the embedded iterator class.  -- is simply not needed in the workings of this program 
+because of Piece's Normalize(dimension) function.  PieceList and RotationList's embedded 
+iterators are actually interfaces to the Standard Template Library's (STL) 
+list<T>::iterator class where T is the Piece class.  The second difference is that 
+TranslationList's iterator is an iterator all its own and the TranslationList does not 
+store a list of pieces in all possible translated positions.  Instead, it generates those 
+translations when they are asked for by ++ and is able to distinguish first and last by 
+storing a pointer to the original given piece.  It does this by using utilizing 
+GetDepth(dimension) and GetMaxUnits() of the Piece class to see if the Piece can translate 
+in the dimension indicated.  If it can, it uses Piece's Translate(dimension) function and 
+if it can't, it Normalize's that dimension, checks the next dimension up in the same way 
+to continue translating in the lowest dimension possible.  When it is no longer possible 
+to translate in any dimension, it sets the last of its data members called 'last', (a 
+boolean value), to true.
+
+Now that we are able to determine all possible Piece rotations and translations, we need 
+a way of collecting the pieces in proper orientations for a solution.  This is 
+accomplished by the Solution class.  This class's only data member is a list of Piece 
+orientation iterators generated by the RotationList and TranslationList classes called 
+'container'.  The 2 iterators are kept together with the help of a struct called 
+SolutionState and each SolutionState instance describes a Piece from the PieceList in 
+specific orientations.  The Solution class is used to put the solutions together in a try 
+and retry type fashion.  One function called PlacePiece(RotationList::iterator, 
+TranslationList::iterator) attempts to add that piece to the container in the form of a 
+SolutionState.  It goes through all of the pieces already in the container and sees if it 
+ends up colliding with any of the other pieces via the Piece class's Collides(Piece) 
+function.  The PlacePiece function returns a boolean value indicating whether or not the 
+piece was added to the container.  Solution also has the capability of removing the last 
+piece placed via its RemovePiece() function.  Although the user would likely want to know 
+the orientation that last Piece was in, so another function provided is 
+GetLastPieceState() which returns the SolutionState of the last Piece in the container.  
+One last function called GetContainer() returns the container data member.
+
+So with all these classes, we can get all possible orientations of a piece in the 
+hypercube and collect pieces in a container.  All we need now is something to coordinate 
+all these things so they can be used to churn out solutions to the puzzle.  This is the 
+job of the SolutionList class.
+
+SolutionList has one data member called rot_lists which is an STL list<RotationList> object.  
+The RotationList's it contains is one for every member of the PieceList.  That is why the 
+only available constructor besides the default copy constructor requires a PieceList object 
+(which must already have been initialized).  Keeping the RotationLists here in the 
+SolutionList class allows us to keep from regenerating the lists over and over again later.  
+The SolutionList class also has an embedded iterator class and associated first() and 
+last() functions.  It's purpose is to find and iterate through all the possible solutions 
+that are unique.  A solution is unique if it does not match any other solution in any 
+rotation.  first() works much in the same way you'll see that operator++ does and last()  
+returns an iterator pointing to the last of an STL list container.  Here's what you will 
+find in the iterator:
+
+SolutionList::iterator
+	Private Data Members:
+		list<Solution> solution_pool - This STL list is used to keep track of the 
+			solutions that have been found so that each subsequent solution 
+			can be compared to see if it's unique.
+		list<Solution>::iterator soln_iter - This STL iterator allows us to keep track 
+			of where we are in the SolutionList.  Since we are generating 
+			solutions only when they are called for and adding them to the 
+			solution_pool, going backwards after having gone forwards via 
+			operator--, is simply an STL operator-- operation.  Only going 
+			forward with operator++ does SolutionList generate and add a 
+			solution to the solution_pool.  So if someone starts with last() and 
+			uses operator--, the whole list is generated on the first operator-- 
+			call.
+		list<RotationList> * starter - This is a pointer to the list of RotationLists 
+			kept as SolutionList's private data member.  This is necessary in 
+			order to keep tabs on where we are in the RotationLists so that 
+			when we are going through them we don't go before the first 
+			element or past the last.
+	Public Member Functions:
+		operator++() - This operator goes through a few nested loops trying to get 
+			various piece orientations to add to a Solution object.  the set-up 
+			of loops is like this.  The outer loop iterates through the collection 
+			of RotationLists in the SolutionList class created from the Pieces in 
+			PieceList.  The middle loop iterates through those RotationLists.  
+			The inner loop takes each Piece handed to it by the RotationList 
+			iterator and uses it to iterator through a TranslationList.  In this 
+			inner loop is where Pieces are added to the Solution container via 
+			Solution's PlacePiece function.  When we are out of RotationList's, 
+			we've successfully found a solution.  There are a few loop control 
+			points.  Before exiting the outer loop, the solution is checked for 
+			uniqueness by passing it to a function described later called 
+			AddSolution.  If the solution can't be added to the solution_pool, 
+			the inner loop's TranslationList iterator is incremented and the 
+			looping continues.  If however, the middle loop finishes naturally 
+			and we haven't finished with the Rotationlists, all orientations were 
+			tried, but the current Piece represented by RotationList and 
+			TranslationList iterators could not be placed.  In this instance, the 
+			last Piece placed in the container is removed and it's 
+			TranslationList iterator is incremented and the looping continues.  
+			Iteration to the last position, (the position just past the last solution 
+			possible), is when we can no longer iterator backwards through 
+			the list of RotationLists.  When this is encountered, we end up with 
+			an empty container, so the STL iterator into the solution_pool is 
+			incremented without having added a solution to the pool.
+		operator--() - This is simply an interface to the STL list iterator to 
+			solution_pool.    If however, the user starts with last(), the 
+			solution_pool is generated in it entirety via a loop which 
+			increments the iterator until it reaches the end.  then it is 
+			decremented one and returns.
+		operator*() - This is also an interface to the STL list, solution_pool.
+		operator!=(SolutionList::iterator) - Yet again, another interface to the STL 
+			list, solution_pool.
+		operator=(SolutionList::iterator) - This operator sets the iterator's 
+			solution_pool and starter pointer equal to one another, but 
+			increments soln_iter until it is in the same respective position as 
+			the other STL iterator being copied.
+		AddSolution(Solution) - This function is pretty complicated, but to put it 
+			simply, the Solution supplied to the function is deemed the 
+			'candidate' solution because it is a candidate for getting into the 
+			solution_pool, but it needs to pass the uniqueness test.  
+			Uniqueness is determined by comparing each piece, in sequence 
+			to respective pieces in the solutions already in the pool.  If none of 
+			the rotations of the first piece in the candidate doesn't match any of 
+			the first pieces in the solutions in the pool, it is unique and added 
+			to the pool without bothering to check any of the other pieces.  If 
+			however, a particular rotation of the first piece matches the first 
+			piece in one or more of the other solutions, those solutions are 
+			singled out and the next piece in the candidate solution is rotated 
+			the same way and compared to the next pieces in those singled-
+			out solutions.  If all the pieces in one of the solutions is a perfect 
+			match to a particular rotation of the candidate solution, the solution 
+			is not added to the pool.  A boolean value reflecting the success of 
+			this addition is returned.
+
+
+Finally, the driver for all of this machinery is a pretty simple matter.  It instantiates 
+and reads in a PieceList from standard input, passes the resulting PieceList to the 
+SolutionList constructor, and iterates through (and prints) all the solutions or at least 
+as many as the number of solutions the user indicates on the command line.
+
+VI. Acknowledgements
+
+I'd like to thank Paul Bourke for his Hyperspace application and User Manual.  The 
+application depicts rotations in 4 dimensions and it and the user manual was the first and 
+only thing I found on the internet which helped me understand rotations in anything but 3 
+dimensions.  While I'm sure there are other resources out there on the subject, his site 
+and application was clear, concise, and to the point and was the first site out of the 
+hundreds I searched that even came close to explaining the subject.  You may visit his site 
+and download the software for free at:
+
+http://www.swin.edu.au/astronomy/pbourke/
