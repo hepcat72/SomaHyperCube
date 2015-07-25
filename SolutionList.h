@@ -27,6 +27,7 @@ class SolutionList
 				//c'tors
 				iterator(){}
 				iterator(iterator&);
+				iterator(iterator const&);
 				
 				//operators
 				iterator& operator=(iterator&);
@@ -34,7 +35,7 @@ class SolutionList
 				iterator& operator--();				//just goes backward through soln_pool
 													//if soln_pool hasn't been created, create 
 													//it using ++
-				bool operator!=(iterator& rhs);
+				bool operator!=(iterator const& rhs);
 													
 				Solution& operator*();				//declare a solution with the last list in
 													//the solution_pool
